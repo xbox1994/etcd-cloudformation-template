@@ -1,4 +1,6 @@
 # etcd-cloudformation-template
-AWS CloudFormation -> Create Stack -> Upload template file
+What is it: AWS CloudFormation template file
 
-Based On crewjam/etcd-aws
+How to use: AWS CloudFormation -> Create Stack -> Upload template file
+
+Based on crewjam/etcd-aws. You can use etcdv3 and optional vpc in other branch.
