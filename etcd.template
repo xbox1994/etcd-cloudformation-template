@@ -273,11 +273,12 @@
     },
     "Application": {
       "Type": "String",
+      "Default": "1",
       "Description": "Number of master instances"
     },
     "InstanceType": {
       "Type": "String",
-      "Default": "t1.micro",
+      "Default": "t2.micro",
       "Description": "The type of instance"
     },
     "KeyPair": {
@@ -286,7 +287,7 @@
     },
     "MasterScale": {
       "Type": "String",
-      "Default": "3",
+      "Default": "2",
       "Description": "Number of master instances"
     }
   },
@@ -305,14 +306,14 @@
       "Type": "AWS::AutoScaling::AutoScalingGroup",
       "CreationPolicy": {
         "ResourceSignal": {
-          "Count": 3,
-          "Timeout": "PT5M"
+          "Count": 2,
+          "Timeout": "PT20M"
         }
       },
       "UpdatePolicy": {
         "AutoScalingRollingUpdate": {
-          "MinInstancesInService": 3,
-          "PauseTime": "PT5M",
+          "MinInstancesInService": 2,
+          "PauseTime": "PT20M",
           "WaitOnResourceSignals": true
         }
       },
@@ -338,7 +339,7 @@
           }
         ],
         "Cooldown": "300",
-        "DesiredCapacity": "3",
+        "DesiredCapacity": "2",
         "HealthCheckGracePeriod": 300,
         "HealthCheckType": "EC2",
         "LaunchConfigurationName": {
@@ -349,8 +350,8 @@
             "Ref": "MasterLoadBalancer"
           }
         ],
-        "MaxSize": "6",
-        "MinSize": "3",
+        "MaxSize": "4",
+        "MinSize": "2",
         "Tags": [
           {
             "Key": "Name",
