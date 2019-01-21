@@ -299,7 +299,17 @@
     "HealthTopic": {
       "Type": "AWS::SNS::Topic",
       "Properties": {
-        "DisplayName": "cloudwatch notifications for ovs-etcd-registry-mb"
+        "DisplayName": {
+          "Fn::Join": [
+            "",
+            [
+              "cloudwatch notifications for",
+              {
+                "Ref": "AWS::StackName"
+              }
+            ]
+          ]
+        }
       }
     },
     "MasterAutoscale": {
@@ -355,7 +365,17 @@
         "Tags": [
           {
             "Key": "Name",
-            "Value": "ovs-etcd-registry-mb-master",
+            "Value": {
+              "Fn::Join": [
+                "",
+                [
+                  {
+                    "Ref": "AWS::StackName"
+                  },
+                  "-asg-master"
+                ]
+              ]
+            },
             "PropagateAtLaunch": true
           },
           {
@@ -367,7 +387,17 @@
           },
           {
             "Key": "cluster",
-            "Value": "ovs-etcd-registry-mb",
+            "Value": {
+              "Fn::Join": [
+                "",
+                [
+                  {
+                    "Ref": "AWS::StackName"
+                  },
+                  "-asg-master-cluster"
+                ]
+              ]
+            },
             "PropagateAtLaunch": true
           }
         ],
@@ -655,7 +685,7 @@
                 {
                   "Ref": "BackupBucket"
                 },
-                "\"\ncoreos:\n  units:\n    - name: etcd-aws.service\n      command: start\n      enable: true\n      content: |\n        [Unit]\n        Description=configures and runs etcd in AWS.\n        \n        [Install]\n        WantedBy=multi-user.target\n        \n        [Service]\n        Restart=always\n        EnvironmentFile=/etc/etcd_aws.env\n        ExecStart=/usr/bin/docker run --name etcd-aws \\\n          -p 2379:2379 -p 2380:2380 \\\n          -v /var/lib/etcd2:/var/lib/etcd2 \\\n          -e ETCD_BACKUP_BUCKET -e ETCD_BACKUP_KEY \\\n          --rm ksowh/etcd-aws\n        ExecStop=-/usr/bin/docker rm -f etcd-aws\n        \n    - name: cfn-signal.service\n      command: start\n      enable: true\n      content: |\n        [Unit]\n        Description=Cloudformation Signal Ready\n        After=etcd-aws.service\n        Requires=etcd-aws.service\n        \n        [Install]\n        WantedBy=multi-user.target\n        \n        [Service]\n        Type=oneshot\n        EnvironmentFile=/etc/environment\n        ExecStart=/bin/bash -c '\\\n        set -ex; \\\n        eval $(docker run ksowh/ec2cluster); \\\n        docker run --rm ksowh/awscli cfn-signal \\\n          --resource MasterAutoscale --stack $TAG_AWS_CLOUDFORMATION_STACK_ID \\\n          --region $REGION || true; \\\n        '\n        \n"
+                "\"\ncoreos:\n  units:\n    - name: etcd-aws.service\n      command: start\n      enable: true\n      content: |\n        [Unit]\n        Description=configures and runs etcd in AWS.\n        \n        [Install]\n        WantedBy=multi-user.target\n        \n        [Service]\n        Restart=always\n        EnvironmentFile=/etc/etcd_aws.env\n        ExecStart=/bin/bash -c '\\\n        set -ex; \\\n        docker run --rm --name etcd-aws \\\n          -p 2379:2379 -p 2380:2380 \\\n          -v /var/lib/etcd3:/var/lib/etcd3 \\\n          -e ETCD_BACKUP_BUCKET -e ETCD_BACKUP_KEY -e ETCD_MAJOR_VERSION='3' \\\n          ksowh/etcd-aws; \\\n        '\n        ExecStop=-/usr/bin/docker rm -f etcd-aws\n        \n    - name: cfn-signal.service\n      command: start\n      enable: true\n      content: |\n        [Unit]\n        Description=Cloudformation Signal Ready\n        After=etcd-aws.service\n        Requires=etcd-aws.service\n        \n        [Install]\n        WantedBy=multi-user.target\n        \n        [Service]\n        Type=oneshot\n        EnvironmentFile=/etc/environment\n        ExecStart=/bin/bash -c '\\\n        set -ex; \\\n        eval $(docker run ksowh/ec2cluster); \\\n        docker run --rm ksowh/awscli cfn-signal \\\n          --resource MasterAutoscale --stack $TAG_AWS_CLOUDFORMATION_STACK_ID \\\n          --region $REGION || true; \\\n        '\n        \n"
               ]
             ]
           }
@@ -677,7 +707,7 @@
             "InstancePort": "2379",
             "LoadBalancerPort": "2379",
             "Protocol": "TCP",
-            "InstanceProtocol" : "TCP"
+            "InstanceProtocol": "TCP"
           }
         ],
         "Scheme": "internal",
@@ -736,7 +766,17 @@
     "MasterLoadBalancerSecurityGroup": {
       "Type": "AWS::EC2::SecurityGroup",
       "Properties": {
-        "GroupDescription": "LoadBalancer-ovs-etcd-registry-mb",
+        "GroupDescription": {
+          "Fn::Join": [
+            "",
+            [
+              "LoadBalancer-",
+              {
+                "Ref": "AWS::StackName"
+              }
+            ]
+          ]
+        },
         "SecurityGroupEgress": [
           {
             "CidrIp": "0.0.0.0/0",
@@ -799,7 +839,17 @@
     "MasterSecurityGroup": {
       "Type": "AWS::EC2::SecurityGroup",
       "Properties": {
-        "GroupDescription": "master-ovs-etcd-registry-mb",
+        "GroupDescription": {
+          "Fn::Join": [
+            "",
+            [
+              "SecurityGroup-",
+              {
+                "Ref": "AWS::StackName"
+              }
+            ]
+          ]
+        },
         "SecurityGroupEgress": [
           {
             "CidrIp": "0.0.0.0/0",
