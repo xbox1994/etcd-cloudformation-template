@@ -411,10 +411,6 @@
         ]
       }
     },
-    "MasterAutoscaleLifecycleHookQueue": {
-      "Type": "AWS::SQS::Queue",
-      "Properties": {}
-    },
     "MasterAutoscaleLifecycleHookRole": {
       "Type": "AWS::IAM::Role",
       "Properties": {
@@ -441,22 +437,6 @@
               "Version": "2012-10-17",
               "Statement": [
                 {
-                  "Sid": "AllowSQSPublish",
-                  "Effect": "Allow",
-                  "Action": [
-                    "sqs:SendMessage",
-                    "sqs:GetQueueUrl"
-                  ],
-                  "Resource": [
-                    {
-                      "Fn::GetAtt": [
-                        "MasterAutoscaleLifecycleHookQueue",
-                        "Arn"
-                      ]
-                    }
-                  ]
-                },
-                {
                   "Sid": "AllowSNSPublish",
                   "Effect": "Allow",
                   "Action": [
@@ -471,28 +451,6 @@
             "PolicyName": "MasterInstancePolicy"
           }
         ]
-      }
-    },
-    "MasterAutoscaleLifecycleHookTerminating": {
-      "Type": "AWS::AutoScaling::LifecycleHook",
-      "Properties": {
-        "AutoScalingGroupName": {
-          "Ref": "MasterAutoscale"
-        },
-        "HeartbeatTimeout": 30,
-        "LifecycleTransition": "autoscaling:EC2_INSTANCE_TERMINATING",
-        "NotificationTargetARN": {
-          "Fn::GetAtt": [
-            "MasterAutoscaleLifecycleHookQueue",
-            "Arn"
-          ]
-        },
-        "RoleARN": {
-          "Fn::GetAtt": [
-            "MasterAutoscaleLifecycleHookRole",
-            "Arn"
-          ]
-        }
       }
     },
     "MasterBackupHealthAlarm": {
@@ -581,23 +539,6 @@
                   ],
                   "Resource": [
                     "*"
-                  ]
-                },
-                {
-                  "Sid": "AllowSQS",
-                  "Effect": "Allow",
-                  "Action": [
-                    "sqs:GetQueueUrl",
-                    "sqs:ReceiveMessage",
-                    "sqs:DeleteMessage"
-                  ],
-                  "Resource": [
-                    {
-                      "Fn::GetAtt": [
-                        "MasterAutoscaleLifecycleHookQueue",
-                        "Arn"
-                      ]
-                    }
                   ]
                 },
                 {
