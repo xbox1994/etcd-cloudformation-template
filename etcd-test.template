@@ -411,90 +411,6 @@
         ]
       }
     },
-    "MasterAutoscaleLifecycleHookQueue": {
-      "Type": "AWS::SQS::Queue",
-      "Properties": {}
-    },
-    "MasterAutoscaleLifecycleHookRole": {
-      "Type": "AWS::IAM::Role",
-      "Properties": {
-        "AssumeRolePolicyDocument": {
-          "Version": "2012-10-17",
-          "Statement": [
-            {
-              "Effect": "Allow",
-              "Principal": {
-                "Service": [
-                  "autoscaling.amazonaws.com"
-                ]
-              },
-              "Action": [
-                "sts:AssumeRole"
-              ]
-            }
-          ]
-        },
-        "Path": "/",
-        "Policies": [
-          {
-            "PolicyDocument": {
-              "Version": "2012-10-17",
-              "Statement": [
-                {
-                  "Sid": "AllowSQSPublish",
-                  "Effect": "Allow",
-                  "Action": [
-                    "sqs:SendMessage",
-                    "sqs:GetQueueUrl"
-                  ],
-                  "Resource": [
-                    {
-                      "Fn::GetAtt": [
-                        "MasterAutoscaleLifecycleHookQueue",
-                        "Arn"
-                      ]
-                    }
-                  ]
-                },
-                {
-                  "Sid": "AllowSNSPublish",
-                  "Effect": "Allow",
-                  "Action": [
-                    "sns:Publish"
-                  ],
-                  "Resource": [
-                    "*"
-                  ]
-                }
-              ]
-            },
-            "PolicyName": "MasterInstancePolicy"
-          }
-        ]
-      }
-    },
-    "MasterAutoscaleLifecycleHookTerminating": {
-      "Type": "AWS::AutoScaling::LifecycleHook",
-      "Properties": {
-        "AutoScalingGroupName": {
-          "Ref": "MasterAutoscale"
-        },
-        "HeartbeatTimeout": 30,
-        "LifecycleTransition": "autoscaling:EC2_INSTANCE_TERMINATING",
-        "NotificationTargetARN": {
-          "Fn::GetAtt": [
-            "MasterAutoscaleLifecycleHookQueue",
-            "Arn"
-          ]
-        },
-        "RoleARN": {
-          "Fn::GetAtt": [
-            "MasterAutoscaleLifecycleHookRole",
-            "Arn"
-          ]
-        }
-      }
-    },
     "MasterBackupHealthAlarm": {
       "Type": "AWS::CloudWatch::Alarm",
       "Properties": {
@@ -505,7 +421,7 @@
           }
         ],
         "AlarmDescription": "key backup count",
-        "AlarmName": "MasterBackupKeyCount",
+        "AlarmName": "MasterBackupKeyCountTest",
         "ComparisonOperator": "LessThanThreshold",
         "Dimensions": [
           {
@@ -575,29 +491,10 @@
                   "Effect": "Allow",
                   "Action": [
                     "ec2:DescribeInstances",
-                    "autoscaling:DescribeAutoScalingGroups",
-                    "autoscaling:DescribeLifecycleHooks",
-                    "autoscaling:CompleteLifecycleAction"
+                    "autoscaling:DescribeAutoScalingGroups"
                   ],
                   "Resource": [
                     "*"
-                  ]
-                },
-                {
-                  "Sid": "AllowSQS",
-                  "Effect": "Allow",
-                  "Action": [
-                    "sqs:GetQueueUrl",
-                    "sqs:ReceiveMessage",
-                    "sqs:DeleteMessage"
-                  ],
-                  "Resource": [
-                    {
-                      "Fn::GetAtt": [
-                        "MasterAutoscaleLifecycleHookQueue",
-                        "Arn"
-                      ]
-                    }
                   ]
                 },
                 {
@@ -685,7 +582,7 @@
                 {
                   "Ref": "BackupBucket"
                 },
-                "\"\ncoreos:\n  units:\n    - name: etcd-aws.service\n      command: start\n      enable: true\n      content: |\n        [Unit]\n        Description=configures and runs etcd in AWS.\n        \n        [Install]\n        WantedBy=multi-user.target\n        \n        [Service]\n        Restart=always\n        EnvironmentFile=/etc/etcd_aws.env\n        ExecStart=/bin/bash -c '\\\n        set -ex; \\\n        docker run --rm --name etcd-aws \\\n          -p 2379:2379 -p 2380:2380 \\\n          -v /var/lib/etcd:/var/lib/etcd \\\n          -e ETCD_BACKUP_BUCKET -e ETCD_BACKUP_KEY -e ETCD_MAJOR_VERSION='3' \\\n          ksowh/etcd-aws; \\\n        '\n        ExecStop=-/usr/bin/docker rm -f etcd-aws\n        \n    - name: cfn-signal.service\n      command: start\n      enable: true\n      content: |\n        [Unit]\n        Description=Cloudformation Signal Ready\n        After=etcd-aws.service\n        Requires=etcd-aws.service\n        \n        [Install]\n        WantedBy=multi-user.target\n        \n        [Service]\n        Type=oneshot\n        EnvironmentFile=/etc/environment\n        ExecStart=/bin/bash -c '\\\n        set -ex; \\\n        eval $(docker run ksowh/ec2cluster); \\\n        docker run --rm ksowh/awscli cfn-signal \\\n          --resource MasterAutoscale --stack $TAG_AWS_CLOUDFORMATION_STACK_ID \\\n          --region $REGION || true; \\\n        '\n        \n"
+                "\"\ncoreos:\n  units:\n    - name: etcd-aws.service\n      command: start\n      enable: true\n      content: |\n        [Unit]\n        Description=configures and runs etcd in AWS.\n        \n        [Install]\n        WantedBy=multi-user.target\n        \n        [Service]\n        Restart=always\n        EnvironmentFile=/etc/etcd_aws.env\n        ExecStart=/bin/bash -c '\\\n        set -ex; \\\n        sudo systemctl stop update-engine; \\\n        sudo systemctl stop locksmithd; \\\n        docker run --rm --name etcd-aws \\\n          -p 2379:2379 -p 2380:2380 \\\n          -v /var/lib/etcd:/var/lib/etcd \\\n          -e ETCD_BACKUP_BUCKET -e ETCD_BACKUP_KEY -e ETCD_MAJOR_VERSION='3' \\\n          ksowh/etcd-aws; \\\n        '\n        ExecStop=-/usr/bin/docker rm -f etcd-aws\n        \n    - name: cfn-signal.service\n      command: start\n      enable: true\n      content: |\n        [Unit]\n        Description=Cloudformation Signal Ready\n        After=etcd-aws.service\n        Requires=etcd-aws.service\n        \n        [Install]\n        WantedBy=multi-user.target\n        \n        [Service]\n        Type=oneshot\n        EnvironmentFile=/etc/environment\n        ExecStart=/bin/bash -c '\\\n        set -ex; \\\n        eval $(docker run ksowh/ec2cluster); \\\n        docker run --rm ksowh/awscli cfn-signal \\\n          --resource MasterAutoscale --stack $TAG_AWS_CLOUDFORMATION_STACK_ID \\\n          --region $REGION || true; \\\n        '\n        \n"
               ]
             ]
           }
@@ -739,7 +636,7 @@
           }
         ],
         "AlarmDescription": "master instance health",
-        "AlarmName": "MasterInstanceHealthTest",
+        "AlarmName": "MasterInstanceHealth",
         "ComparisonOperator": "LessThanThreshold",
         "Dimensions": [
           {

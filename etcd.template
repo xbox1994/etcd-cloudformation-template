@@ -411,90 +411,6 @@
         ]
       }
     },
-    "MasterAutoscaleLifecycleHookQueue": {
-      "Type": "AWS::SQS::Queue",
-      "Properties": {}
-    },
-    "MasterAutoscaleLifecycleHookRole": {
-      "Type": "AWS::IAM::Role",
-      "Properties": {
-        "AssumeRolePolicyDocument": {
-          "Version": "2012-10-17",
-          "Statement": [
-            {
-              "Effect": "Allow",
-              "Principal": {
-                "Service": [
-                  "autoscaling.amazonaws.com"
-                ]
-              },
-              "Action": [
-                "sts:AssumeRole"
-              ]
-            }
-          ]
-        },
-        "Path": "/",
-        "Policies": [
-          {
-            "PolicyDocument": {
-              "Version": "2012-10-17",
-              "Statement": [
-                {
-                  "Sid": "AllowSQSPublish",
-                  "Effect": "Allow",
-                  "Action": [
-                    "sqs:SendMessage",
-                    "sqs:GetQueueUrl"
-                  ],
-                  "Resource": [
-                    {
-                      "Fn::GetAtt": [
-                        "MasterAutoscaleLifecycleHookQueue",
-                        "Arn"
-                      ]
-                    }
-                  ]
-                },
-                {
-                  "Sid": "AllowSNSPublish",
-                  "Effect": "Allow",
-                  "Action": [
-                    "sns:Publish"
-                  ],
-                  "Resource": [
-                    "*"
-                  ]
-                }
-              ]
-            },
-            "PolicyName": "MasterInstancePolicy"
-          }
-        ]
-      }
-    },
-    "MasterAutoscaleLifecycleHookTerminating": {
-      "Type": "AWS::AutoScaling::LifecycleHook",
-      "Properties": {
-        "AutoScalingGroupName": {
-          "Ref": "MasterAutoscale"
-        },
-        "HeartbeatTimeout": 30,
-        "LifecycleTransition": "autoscaling:EC2_INSTANCE_TERMINATING",
-        "NotificationTargetARN": {
-          "Fn::GetAtt": [
-            "MasterAutoscaleLifecycleHookQueue",
-            "Arn"
-          ]
-        },
-        "RoleARN": {
-          "Fn::GetAtt": [
-            "MasterAutoscaleLifecycleHookRole",
-            "Arn"
-          ]
-        }
-      }
-    },
     "MasterBackupHealthAlarm": {
       "Type": "AWS::CloudWatch::Alarm",
       "Properties": {
@@ -575,29 +491,10 @@
                   "Effect": "Allow",
                   "Action": [
                     "ec2:DescribeInstances",
-                    "autoscaling:DescribeAutoScalingGroups",
-                    "autoscaling:DescribeLifecycleHooks",
-                    "autoscaling:CompleteLifecycleAction"
+                    "autoscaling:DescribeAutoScalingGroups"
                   ],
                   "Resource": [
                     "*"
-                  ]
-                },
-                {
-                  "Sid": "AllowSQS",
-                  "Effect": "Allow",
-                  "Action": [
-                    "sqs:GetQueueUrl",
-                    "sqs:ReceiveMessage",
-                    "sqs:DeleteMessage"
-                  ],
-                  "Resource": [
-                    {
-                      "Fn::GetAtt": [
-                        "MasterAutoscaleLifecycleHookQueue",
-                        "Arn"
-                      ]
-                    }
                   ]
                 },
                 {
