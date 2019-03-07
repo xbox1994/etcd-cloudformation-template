@@ -636,7 +636,7 @@
           }
         ],
         "AlarmDescription": "master instance health",
-        "AlarmName": "MasterInstanceHealth",
+        "AlarmName": "MasterInstanceHealthTest",
         "ComparisonOperator": "LessThanThreshold",
         "Dimensions": [
           {
