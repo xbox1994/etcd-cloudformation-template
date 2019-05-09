@@ -271,6 +271,10 @@
       "Type": "AWS::EC2::Subnet::Id",
       "Description": "VPC subnet 1 ID"
     },
+    "VpcSubnet2": {
+      "Type": "AWS::EC2::Subnet::Id",
+      "Description": "VPC subnet 2 ID"
+    },
     "Application": {
       "Type": "String",
       "Default": "1",
@@ -287,7 +291,7 @@
     },
     "MasterScale": {
       "Type": "String",
-      "Default": "2",
+      "Default": "3",
       "Description": "Number of master instances"
     }
   },
@@ -316,13 +320,13 @@
       "Type": "AWS::AutoScaling::AutoScalingGroup",
       "CreationPolicy": {
         "ResourceSignal": {
-          "Count": 2,
+          "Count": 3,
           "Timeout": "PT20M"
         }
       },
       "UpdatePolicy": {
         "AutoScalingRollingUpdate": {
-          "MinInstancesInService": 2,
+          "MinInstancesInService": 3,
           "PauseTime": "PT20M",
           "WaitOnResourceSignals": true
         }
@@ -346,10 +350,19 @@
               },
               "1"
             ]
+          },
+          {
+            "Fn::FindInMap": [
+              "AvailablityZones",
+              {
+                "Ref": "AWS::Region"
+              },
+              "1"
+            ]
           }
         ],
         "Cooldown": "300",
-        "DesiredCapacity": "2",
+        "DesiredCapacity": "3",
         "HealthCheckGracePeriod": 300,
         "HealthCheckType": "EC2",
         "LaunchConfigurationName": {
@@ -360,8 +373,8 @@
             "Ref": "MasterLoadBalancer"
           }
         ],
-        "MaxSize": "4",
-        "MinSize": "2",
+        "MaxSize": "6",
+        "MinSize": "3",
         "Tags": [
           {
             "Key": "Name",
@@ -372,7 +385,7 @@
                   {
                     "Ref": "AWS::StackName"
                   },
-                  "-asg-master"
+                  "-master"
                 ]
               ]
             },
@@ -394,7 +407,7 @@
                   {
                     "Ref": "AWS::StackName"
                   },
-                  "-asg-master-cluster"
+                  "-master-cluster"
                 ]
               ]
             },
@@ -407,6 +420,9 @@
           },
           {
             "Ref": "VpcSubnet1"
+          },
+          {
+            "Ref": "VpcSubnet2"
           }
         ]
       }
@@ -421,7 +437,7 @@
           }
         ],
         "AlarmDescription": "key backup count",
-        "AlarmName": "MasterBackupKeyCount",
+        "AlarmName": "MasterBackupKeyCountNew",
         "ComparisonOperator": "LessThanThreshold",
         "Dimensions": [
           {
@@ -619,6 +635,9 @@
           },
           {
             "Ref": "VpcSubnet1"
+          },
+          {
+            "Ref": "VpcSubnet2"
           }
         ]
       }
@@ -636,7 +655,7 @@
           }
         ],
         "AlarmDescription": "master instance health",
-        "AlarmName": "MasterInstanceHealth",
+        "AlarmName": "MasterInstanceHealthNew",
         "ComparisonOperator": "LessThanThreshold",
         "Dimensions": [
           {
